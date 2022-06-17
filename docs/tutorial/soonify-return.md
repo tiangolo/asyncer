@@ -114,11 +114,11 @@ Because of the way **Asyncer** is designed, you will get **typing support** in t
 
 This means that your editor will know the type of that `soon_value1.value`, and will be able to provide you **autocompletion**:
 
-<img class="shadow" src="/img/tutorial/soonify-return/image01.png">
+<img class="shadow" src="/docs/img/tutorial/soonify-return/image01.png">
 
 And because the editor knows the types of the values, you will also get **inline errors**:
 
-<img class="shadow" src="/img/tutorial/soonify-return/image02.png">
+<img class="shadow" src="/docs/img/tutorial/soonify-return/image02.png">
 
 And because the editor can follow and **infer** this type information, you will also get **type support** down the line in anything that uses these values.
 
@@ -126,7 +126,7 @@ For example, it will be able to infer that `get_data()` returns a list of string
 
 And when you `await` and access the return value of `get_data()` you will also get editor support:
 
-<img class="shadow" src="/img/tutorial/soonify-return/image03.png">
+<img class="shadow" src="/docs/img/tutorial/soonify-return/image03.png">
 
 Notice that you didn't even have to add the type to most of the variables, only to the function parameters, and everything else was **inferred**.
 

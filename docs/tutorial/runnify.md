@@ -52,11 +52,11 @@ And here's the advantage of this approach, you get **better typing support**.
 
 For example, you will get editor **autocompletion**:
 
-<img class="shadow" src="/img/tutorial/runnify/image01.png">
+<img class="shadow" src="/docs/img/tutorial/runnify/image01.png">
 
 And you will get editor **inline errors**:
 
-<img class="shadow" src="/img/tutorial/runnify/image02.png">
+<img class="shadow" src="/docs/img/tutorial/runnify/image02.png">
 
 You will also get **mypy** support if you use it.
 

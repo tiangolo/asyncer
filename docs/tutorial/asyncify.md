@@ -100,10 +100,10 @@ But `asyncify()` will do the right thing and run it on a *worker thread*. This w
 
 And of course, because the way **Asyncer** is designed, you will get **typing support** with inline errors and autocompletion for the function arguments:
 
-<img class="shadow" src="/img/tutorial/asyncify/image01.png">
+<img class="shadow" src="/docs/img/tutorial/asyncify/image01.png">
 
 And you will also get **typing support** for the return value:
 
-<img class="shadow" src="/img/tutorial/asyncify/image02.png">
+<img class="shadow" src="/docs/img/tutorial/asyncify/image02.png">
 
 And if you used tools like **mypy** those would also be able to use this typing support to help you ensure your **code is correct** and prevent many bugs. 😎

@@ -31,4 +31,4 @@ The way this will work, step by step, is like this:
 
 Of course, as with the rest of **Asyncer**, you will get **typing support** for the function arguments, the return value, etc:
 
-<img class="shadow" src="/img/tutorial/syncify/image01.png">
+<img class="shadow" src="/docs/img/tutorial/syncify/image01.png">

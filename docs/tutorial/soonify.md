@@ -244,11 +244,11 @@ Now, because of the way **Asyncer** is designed, you will get typing support for
 
 This means that you will have **autocompletion** in your editor for the original arguments of the async function to call:
 
-<img class="shadow" src="/img/tutorial/soonify/image01.png">
+<img class="shadow" src="/docs/img/tutorial/soonify/image01.png">
 
 And you will have inline errors in your editor too:
 
-<img class="shadow" src="/img/tutorial/soonify/image02.png">
+<img class="shadow" src="/docs/img/tutorial/soonify/image02.png">
 
 If you use tools like **mypy**, those tools will also be able to help you detect those possible errors.
 
