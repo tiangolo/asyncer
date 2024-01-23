@@ -43,7 +43,7 @@ cairosvg = "^2.5.2"
 mkdocs = "^1.2.1"
 mkdocs-material = "^8.1.4"
 mdx-include = "^1.4.1"
-coverage = {extras = ["toml"], version = "^6.2"}
+coverage = {extras = ["toml"], version = "^7.2"}
 autoflake = "^1.4"
 isort = "^5.9.3"
 
