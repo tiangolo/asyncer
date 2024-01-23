@@ -37,7 +37,7 @@ typing_extensions = { version = "^4.8.0", python = "<3.10" }
 pytest = "^7.0.1"
 mypy = "^0.971"
 flake8 = "^5.0.4"
-black = "^22.10.0"
+black = "^23.3.0"
 pillow = "^9.3.0"
 cairosvg = "^2.5.2"
 mkdocs = "^1.2.1"
