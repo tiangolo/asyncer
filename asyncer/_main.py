@@ -11,6 +11,7 @@ from typing import (
     Optional,
     TypeVar,
     Union,
+    overload,
 )
 
 if sys.version_info >= (3, 10):
@@ -41,6 +42,7 @@ def get_asynclib(asynclib_name: Union[str, None] = None) -> Any:
 T_Retval = TypeVar("T_Retval")
 T_ParamSpec = ParamSpec("T_ParamSpec")
 T = TypeVar("T")
+TaskGroupCls = TypeVar("TaskGroupCls")
 
 
 class PendingType:
@@ -168,7 +170,8 @@ class TaskGroup(_TaskGroup):
         return wrapper
 
     # This is only for the return type annotation, but it won't really be called
-    async def __aenter__(self) -> "TaskGroup":  # pragma: nocover
+    # also, annotates all inherits by their class without redefinition tricks
+    async def __aenter__(self: TaskGroupCls) -> TaskGroupCls:  # pragma: nocover
         """Enter the task group context and allow starting new tasks."""
         return await super().__aenter__()  # type: ignore
 
@@ -190,11 +193,40 @@ def create_task_group() -> "TaskGroup":
     return ExtendedTaskGroup()
 
 
-def runnify(
+@overload
+def runnify(  # pragma: no cover
+    async_function: None,
+    backend: str = "asyncio",
+    backend_options: Optional[Dict[str, Any]] = None,
+) -> Callable[
+    [Callable[T_ParamSpec, Coroutine[Any, Any, T_Retval]]],
+    Callable[T_ParamSpec, T_Retval],
+]:
+    ...
+
+
+@overload
+def runnify(  # pragma: no cover
     async_function: Callable[T_ParamSpec, Coroutine[Any, Any, T_Retval]],
     backend: str = "asyncio",
     backend_options: Optional[Dict[str, Any]] = None,
 ) -> Callable[T_ParamSpec, T_Retval]:
+    ...
+
+
+def runnify(
+    async_function: Optional[
+        Callable[T_ParamSpec, Coroutine[Any, Any, T_Retval]]
+    ] = None,
+    backend: str = "asyncio",
+    backend_options: Optional[Dict[str, Any]] = None,
+) -> Union[
+    Callable[T_ParamSpec, T_Retval],
+    Callable[
+        [Callable[T_ParamSpec, Coroutine[Any, Any, T_Retval]]],
+        Callable[T_ParamSpec, T_Retval],
+    ],
+]:
     """
     Take an async function and create a regular (blocking) function that receives the
     same keyword and positional arguments for the original async function, and that when
@@ -235,19 +267,67 @@ def runnify(
     `LookupError`: if the named backend is not found
     """
 
-    @functools.wraps(async_function)
-    def wrapper(*args: T_ParamSpec.args, **kwargs: T_ParamSpec.kwargs) -> T_Retval:
-        partial_f = functools.partial(async_function, *args, **kwargs)
+    wrapper = _wrap_runnify_args(backend=backend, backend_options=backend_options)
 
-        return anyio.run(partial_f, backend=backend, backend_options=backend_options)
+    if async_function is None:
+        return wrapper
 
-    return wrapper
+    return wrapper(async_function)
 
 
-def syncify(
+def _wrap_runnify_args(
+    backend: str = "asyncio",
+    backend_options: Optional[Dict[str, Any]] = None,
+) -> Callable[
+    [Callable[T_ParamSpec, Coroutine[Any, Any, T_Retval]]],
+    Callable[T_ParamSpec, T_Retval],
+]:
+    def wrap_runnify(
+        async_function: Callable[T_ParamSpec, Coroutine[Any, Any, T_Retval]],
+    ) -> Callable[T_ParamSpec, T_Retval]:
+        @functools.wraps(async_function)
+        def wrapper(*args: T_ParamSpec.args, **kwargs: T_ParamSpec.kwargs) -> T_Retval:
+            partial_f = functools.partial(async_function, *args, **kwargs)
+            return anyio.run(
+                partial_f, backend=backend, backend_options=backend_options
+            )
+
+        return wrapper
+
+    return wrap_runnify
+
+
+@overload
+def syncify(  # pragma: no cover
+    async_function: None,
+    raise_sync_error: bool = True,
+) -> Callable[
+    [Callable[T_ParamSpec, Coroutine[Any, Any, T_Retval]]],
+    Callable[T_ParamSpec, T_Retval],
+]:
+    ...
+
+
+@overload
+def syncify(  # pragma: no cover
     async_function: Callable[T_ParamSpec, Coroutine[Any, Any, T_Retval]],
     raise_sync_error: bool = True,
 ) -> Callable[T_ParamSpec, T_Retval]:
+    ...
+
+
+def syncify(
+    async_function: Optional[
+        Callable[T_ParamSpec, Coroutine[Any, Any, T_Retval]]
+    ] = None,
+    raise_sync_error: bool = True,
+) -> Union[
+    Callable[T_ParamSpec, T_Retval],
+    Callable[
+        [Callable[T_ParamSpec, Coroutine[Any, Any, T_Retval]]],
+        Callable[T_ParamSpec, T_Retval],
+    ],
+]:
     """
     Take an async function and create a regular one that receives the same keyword and
     positional arguments, and that when called, calls the original async function in
@@ -295,24 +375,74 @@ def syncify(
         as the original async one, that when called runs the same original function in
         the main async loop when called from a worker thread and returns the result.
     """
+    wrapper = _wrap_syncify_args(
+        raise_sync_error=raise_sync_error,
+    )
 
-    @functools.wraps(async_function)
-    def wrapper(*args: T_ParamSpec.args, **kwargs: T_ParamSpec.kwargs) -> T_Retval:
-        current_async_module = getattr(threadlocals, "current_async_module", None)
-        partial_f = functools.partial(async_function, *args, **kwargs)
-        if current_async_module is None and raise_sync_error is False:
-            return anyio.run(partial_f)
-        return anyio.from_thread.run(partial_f)
+    if async_function is None:
+        return wrapper
 
-    return wrapper
+    return wrapper(async_function)
 
 
-def asyncify(
+def _wrap_syncify_args(
+    *,
+    raise_sync_error: bool = True,
+) -> Callable[
+    [Callable[T_ParamSpec, Coroutine[Any, Any, T_Retval]]],
+    Callable[T_ParamSpec, T_Retval],
+]:
+    def wrap_syncify(
+        async_function: Callable[T_ParamSpec, Coroutine[Any, Any, T_Retval]],
+    ) -> Callable[T_ParamSpec, T_Retval]:
+        @functools.wraps(async_function)
+        def wrapper(*args: T_ParamSpec.args, **kwargs: T_ParamSpec.kwargs) -> T_Retval:
+            current_async_module = getattr(threadlocals, "current_async_module", None)
+            partial_f = functools.partial(async_function, *args, **kwargs)
+            if current_async_module is None and raise_sync_error is False:
+                return anyio.run(partial_f)
+            return anyio.from_thread.run(partial_f)
+
+        return wrapper
+
+    return wrap_syncify
+
+
+@overload
+def asyncify(  # pragma: no cover
+    function: None,
+    *,
+    cancellable: bool = False,
+    limiter: Optional[anyio.CapacityLimiter] = None,
+) -> Callable[
+    [Callable[T_ParamSpec, T_Retval]],
+    Callable[T_ParamSpec, Awaitable[T_Retval]],
+]:
+    ...
+
+
+@overload
+def asyncify(  # pragma: no cover
     function: Callable[T_ParamSpec, T_Retval],
     *,
     cancellable: bool = False,
     limiter: Optional[anyio.CapacityLimiter] = None,
 ) -> Callable[T_ParamSpec, Awaitable[T_Retval]]:
+    ...
+
+
+def asyncify(
+    function: Optional[Callable[T_ParamSpec, T_Retval]] = None,
+    *,
+    cancellable: bool = False,
+    limiter: Optional[anyio.CapacityLimiter] = None,
+) -> Union[
+    Callable[T_ParamSpec, Awaitable[T_Retval]],
+    Callable[
+        [Callable[T_ParamSpec, T_Retval]],
+        Callable[T_ParamSpec, Awaitable[T_Retval]],
+    ],
+]:
     """
     Take a blocking function and create an async one that receives the same
     positional and keyword arguments, and that when called, calls the original function
@@ -350,13 +480,31 @@ def asyncify(
     original one, that when called runs the same original function in a thread worker
     and returns the result.
     """
+    wrapper = _wrap_asyncify_args(cancellable=cancellable, limiter=limiter)
 
-    async def wrapper(
-        *args: T_ParamSpec.args, **kwargs: T_ParamSpec.kwargs
-    ) -> T_Retval:
-        partial_f = functools.partial(function, *args, **kwargs)
-        return await anyio.to_thread.run_sync(
-            partial_f, cancellable=cancellable, limiter=limiter
-        )
+    if function is None:
+        return wrapper
 
-    return wrapper
+    return wrapper(function)
+
+
+def _wrap_asyncify_args(
+    *, cancellable: bool = False, limiter: Optional[anyio.CapacityLimiter] = None
+) -> Callable[
+    [Callable[T_ParamSpec, T_Retval]],
+    Callable[T_ParamSpec, Awaitable[T_Retval]],
+]:
+    def wrap_asyncify(
+        function: Callable[T_ParamSpec, T_Retval],
+    ) -> Callable[T_ParamSpec, Awaitable[T_Retval]]:
+        async def wrapper(
+            *args: T_ParamSpec.args, **kwargs: T_ParamSpec.kwargs
+        ) -> T_Retval:
+            partial_f = functools.partial(function, *args, **kwargs)
+            return await anyio.to_thread.run_sync(
+                partial_f, cancellable=cancellable, limiter=limiter
+            )
+
+        return wrapper
+
+    return wrap_asyncify
