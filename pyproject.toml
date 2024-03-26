@@ -36,7 +36,7 @@ typing_extensions = { version = "^4.8.0", python = "<3.10" }
 [tool.poetry.dev-dependencies]
 pytest = "^7.0.1"
 mypy = "1.4.1"
-mkdocs-material = "9.2.7"
+mkdocs-material = "9.5.15"
 pillow = "^9.3.0"
 cairosvg = "^2.5.2"
 mdx-include = "^1.4.1"
