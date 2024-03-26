@@ -37,7 +37,7 @@ typing_extensions = { version = "^4.8.0", python = "<3.10" }
 pytest = "^7.0.1"
 mypy = "1.4.1"
 mkdocs-material = "9.2.7"
-pillow = "^9.3.0"
+pillow = "^10.2.0"
 cairosvg = "^2.5.2"
 mdx-include = "^1.4.1"
 coverage = {extras = ["toml"], version = ">=6.2,<8.0"}
