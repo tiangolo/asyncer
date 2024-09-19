@@ -1,6 +1,5 @@
 # AnyIO 4.1.0 renamed cancellable to abandon_on_cancel
-import importlib
-import importlib.metadata
+import sys
 from typing import Callable, TypeVar, Union
 
 import anyio
@@ -8,7 +7,12 @@ import anyio.to_thread
 from anyio import CapacityLimiter
 from typing_extensions import TypeVarTuple, Unpack
 
-ANYIO_VERSION = importlib.metadata.version("anyio")
+if sys.version_info < (3, 10):
+    from importlib_metadata import version as get_version
+else:
+    from importlib.metadata import version as get_version
+
+ANYIO_VERSION = get_version("anyio")
 
 T_Retval = TypeVar("T_Retval")
 PosArgsT = TypeVarTuple("PosArgsT")
