@@ -1,6 +1,5 @@
-# AnyIO 4.1.0 renamed cancellable to abandon_on_cancel
 import sys
-from typing import Callable, TypeVar, Union
+from typing import Callable, Tuple, TypeVar, Union
 
 import anyio
 import anyio.to_thread
@@ -12,12 +11,16 @@ if sys.version_info < (3, 10):
 else:
     from importlib.metadata import version as get_version
 
-ANYIO_VERSION = get_version("anyio")
+ANYIO_VERSION: Tuple[int, ...] = tuple(
+    int(num) for num in get_version("anyio").split(".")[:3]
+)
 
 T_Retval = TypeVar("T_Retval")
 PosArgsT = TypeVarTuple("PosArgsT")
 
-if ANYIO_VERSION >= "4.1.0":
+
+# AnyIO 4.1.0 renamed cancellable to abandon_on_cancel
+if ANYIO_VERSION >= (4, 1):
 
     async def run_sync(
         func: Callable[[Unpack[PosArgsT]], T_Retval],
