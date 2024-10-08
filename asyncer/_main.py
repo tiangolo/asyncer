@@ -135,7 +135,7 @@ class TaskGroup(_TaskGroup):
         async with asyncer.create_task_group() as task_group:
             result1 = task_group.soonify(do_work)(name="task 1")
             result2 = task_group.soonify(do_work)(name="task 2")
-            await anyio.sleep(0)
+            await anyio.lowlevel.checkpoint()
             if not result1.pending:
                 print(result1.value)
             if not result2.pending:
