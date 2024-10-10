@@ -1,6 +1,4 @@
-# AnyIO 4.1.0 renamed cancellable to abandon_on_cancel
-import importlib
-import importlib.metadata
+import inspect
 from typing import Callable, TypeVar, Union
 
 import anyio
@@ -8,12 +6,12 @@ import anyio.to_thread
 from anyio import CapacityLimiter
 from typing_extensions import TypeVarTuple, Unpack
 
-ANYIO_VERSION = importlib.metadata.version("anyio")
-
 T_Retval = TypeVar("T_Retval")
 PosArgsT = TypeVarTuple("PosArgsT")
 
-if ANYIO_VERSION >= "4.1.0":
+
+# AnyIO 4.1.0 renamed cancellable to abandon_on_cancel
+if "abandon_on_cancel" in inspect.getfullargspec(anyio.to_thread.run_sync).kwonlyargs:
 
     async def run_sync(
         func: Callable[[Unpack[PosArgsT]], T_Retval],
